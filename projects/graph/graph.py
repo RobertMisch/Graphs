@@ -107,8 +107,9 @@ class Graph:
         queue.enqueue(starting_path)
         while queue.size() > 0:
             path= queue.dequeue()
-            current_pos=path.pop()
-            path.append(current_pos)
+            current_pos= path[-1]
+            # current_pos=path.pop() originally had this, but can just do [-1]
+            # path.append(current_pos)
             if current_pos not in visited:
                 visited.add(current_pos)
                 #check if it's the guy
