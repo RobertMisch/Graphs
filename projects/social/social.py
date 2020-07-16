@@ -1,6 +1,20 @@
+import random
 class User:
     def __init__(self, name):
         self.name = name
+
+class Queue():
+    def __init__(self):
+        self.queue = []
+    def enqueue(self, value):
+        self.queue.append(value)
+    def dequeue(self):
+        if self.size() > 0:
+            return self.queue.pop(0)
+        else:
+            return None
+    def size(self):
+        return len(self.queue)
 
 class SocialGraph:
     def __init__(self):
@@ -70,8 +84,21 @@ class SocialGraph:
 
         The key is the friend's ID and the value is the path.
         """
+        queue= Queue()
         visited = {}  # Note that this is a dictionary, not a set
-        # !!!! IMPLEMENT ME
+        queue.enqueue([user_id])
+        # do a bft
+        while queue.size() > 0:
+            path = queue.dequeue()
+            current_pos = path[-1]
+            # print(current_pos)
+            if current_pos not in visited:
+                for friend in self.friendships[current_pos]:
+                    path_to_add = path + [friend]
+                    visited[current_pos]= path
+                    queue.enqueue(path_to_add)
+
+
         return visited
 
 
