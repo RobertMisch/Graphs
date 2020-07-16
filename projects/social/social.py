@@ -94,8 +94,8 @@ class SocialGraph:
             # print(current_pos)
             if current_pos not in visited:
                 for friend in self.friendships[current_pos]:
-                    path_to_add = path + [friend]
                     visited[current_pos]= path
+                    path_to_add = path + [friend]
                     queue.enqueue(path_to_add)
 
 
