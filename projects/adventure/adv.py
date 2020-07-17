@@ -66,22 +66,70 @@ def main_travel(length):
     visited={}
     #dive phase
     #it needs to look for a non-visited room, and go that direction
-    # stack = Stack()
-    # stack.push(player.current_room)
+    stack = Stack()
+    stack.push(player.current_room)
     running=True
     # diving=True
     # temp_visited, temp_path = df_stack(visited, path)
     # prev_room=() #stores as a tuple, (id, direction to flip)
     while running <5 :
-        # running=False
+        running=False
         # temp_visited, temp_path = df_stack(visited, path)
-        df_stack(visited, path)
-        print(player.current_room.id)
-        print(path)
-        # path = path + temp_path
-        # visited = {**visited, **temp_visited}
-        # print(temp_visited)
-        # print(temp_path)
+        # df_stack(visited, path)
+        stack=Stack()
+        # # location = player.current_room
+        # # directions = location.get_exits()
+
+        # pos_path=[]
+        # exits={}
+        # for item in player.current_room.get_exits():#[n, s, w, e]
+        #     exits[item]="?"
+        exits = player.current_room.get_exits()
+        prev_node=() #stored as (id, direction)
+        df_start= (player.current_room.id, prev_node, exits) #[(id#, (), {n:"?",s:"?",e:"?",w:"?"}, [])]
+        stack.push(df_start)
+
+        # # dft
+        while stack.size() > 0:
+            location = player.current_room
+            current_pos = stack.pop()
+            current_id, prev_node, available_directions= current_pos #possibly add a pos_path for path recording
+            if current_id not in visited:
+                visited[current_id]={}
+                for direction in available_directions:
+                    visited[location.id][direction]='?'
+                #get as much free info in the node as possible
+                if prev_node != ():
+                    if prev_node[1] == 'n':
+                        visited[location.id]['s'] = prev_node[0]
+                    if prev_node[1] == 's':
+                        visited[location.id]['n'] = prev_node[0]
+                    if prev_node[1] == 'e':
+                        visited[location.id]['w'] = prev_node[0]
+                    if prev_node[1] == 'w':
+                        visited[location.id]['e'] = prev_node[0]
+                for key, value in visited[location.id].items():
+                    if location.get_room_in_direction(key).id in visited:
+                        visited[location.id][key]=location.get_room_in_direction(key).id
+                        if key == 'n':
+                            visited[location.get_room_in_direction(key).id]['s'] = location.id
+                        if key == 's':
+                            visited[location.get_room_in_direction(key).id]['n'] = location.id
+                        if key == 'e':
+                            visited[location.get_room_in_direction(key).id]['w'] = location.id
+                        if key == 'w':
+                            visited[location.get_room_in_direction(key).id]['e'] = location.id
+                for key, value in visited[location.id].items():
+                    if value == "?":
+                        prev_node=(location.id, key)
+                        path.append(key)
+                        visited[location.id][key]=location.get_room_in_direction(key).id
+                        player.travel(key)
+                        location=player.current_room
+                        # path_to_add= pos_path + [key]
+                        #[(id#, None, {n:"?",s:"?",e:"?",w:"?"}, [path])]
+                        stack.push((location.id, prev_node, location.get_exits()))
+                        break
         #diving for the farthest node to the north
         # while diving:
         #     diving = False
@@ -129,16 +177,17 @@ def main_travel(length):
         #         prev_room=(location.id, choice)
         #         visited[location.id][choice]=location.get_room_in_direction(choice).id
         #         player.travel(choice)
-                # print(player.current_room.id)
-                # print(location.id)
-                # break
+        #         print(player.current_room.id)
+        #         print(location.id)
+        #         break
             # print(visited)
             # print(path)
         #check if we're done
         #if we arent done, find the next place that we need to dive
         if len(visited) < length:
-            running+=1
-            # diving=True
+            # running+=1
+            running=True
+            diving=True
             backtrack_path = bfs(visited)
             print(path)
             
