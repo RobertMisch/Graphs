@@ -50,132 +50,78 @@ player = Player(world.starting_room)
 """
 find an unexplored direction, and follow it until df finds an end with explored directions
 """
-def main_travel(length):
-    path = []
-    visited = {}
-    running = True
-    # running = 0
-    while running:
-        running = False
-        # print(visited)
-        df_stack(visited, path)
-        # print(player.current_room.id)
-        # print(path)
-        if len(visited) < len(room_graph):
-            running = True
-            backtrack_path = bfs(visited)
-            # print(path)
-            # now that I have the back tracking path, I need to execute those moves and go back to the top of the loop
-            for node in backtrack_path:
-                if node[1] == None:
-                    continue
-                else:
-                    path.append(node[1])
-                    player.travel(node[1])
+def path_driver(player):
+    pass
+    # result=[]
+    # result= test_dft(player)
+    # result= rooms_to_path(result)
 
+
+def test_dft(player):
+    stack=Stack()
+    path= []
+    visited = set()
+    stack.push(player.current_room)
+    # print(player.current_room)
+    while stack.size() > 0:
+        current_room = stack.pop()
+        # print(f"current {current_room}")
+        if current_room.id not in visited:
+            visited.add(current_room.id)
+            path.append(current_room.id)
+            for direction in current_room.get_exits(): #need something to actually get the neighbors
+                stack.push(current_room.get_room_in_direction(direction))
+    # print(path)
     return path
 
-def df_stack(visited, path):
-    # dft initialization
-    stack = Stack()
-
-    exits = player.current_room.get_exits()
-    prev_node = ()  # stored as (id, direction)
-    # [(id#, None, {n:"?",s:"?",e:"?",w:"?"}, [])]
-    df_start = (player.current_room.id, prev_node, exits)
-    stack.push(df_start)
-    # # dft
-    while stack.size() > 0:
-        location = player.current_room
-        current_pos = stack.pop()
-        current_id, prev_node, available_directions = current_pos
-        if current_id not in visited:
-            visited[current_id] = {}
-            for direction in available_directions:
-                visited[location.id][direction] = '?'
-
-            # get as much free info in the node as possible
-            if prev_node != ():
-                if prev_node[1] == 'n':
-                    visited[location.id]['s'] = prev_node[0]
-                if prev_node[1] == 's':
-                    visited[location.id]['n'] = prev_node[0]
-                if prev_node[1] == 'e':
-                    visited[location.id]['w'] = prev_node[0]
-                if prev_node[1] == 'w':
-                    visited[location.id]['e'] = prev_node[0]
-        for key, value in visited[location.id].items():
-            if location.get_room_in_direction(key).id in visited:
-                looking_at = location.get_room_in_direction(key)
-                visited[location.id][key] = looking_at.id
-                if key == 'n':
-                    visited[looking_at.id]['s'] = location.id
-                if key == 's':
-                    visited[looking_at.id]['n'] = location.id
-                if key == 'e':
-                    visited[looking_at.id]['w'] = location.id
-                if key == 'w':
-                    visited[looking_at.id]['e'] = location.id
-                    
-        possible_directions=[]
-        for key, value in visited[location.id].items():
-            if value == '?':
-                possible_directions.append(key)
-        # print(possible_directions)
-        if len(possible_directions) > 0:
-            choice = random.choice(possible_directions)
-            prev_node = (location.id, choice)
-            path.append(choice)
-            visited[location.id][choice] = location.get_room_in_direction(choice).id
-            player.travel(choice)
-            location = player.current_room
-            stack.push((location.id, prev_node, location.get_exits()))
-            
-        # for key, value in visited[location.id].items():
-        #     if value == "?":
-        #         prev_node = (location.id, key)
-        #         path.append(key)
-        #         visited[location.id][key] = location.get_room_in_direction(
-        #             key).id
-        #         player.travel(key)
-        #         location = player.current_room
-        #         stack.push((location.id, prev_node, location.get_exits()))
-        #         break
-    return (visited, path)
-
-def bfs(visited):
+def bfs(player, target):
     queue = Queue()
-    checked = {}
-    location = player.current_room
-    backtrack_path = [(location.id, None)]  # (ids, direction to add to path)
-    queue.enqueue(backtrack_path)
+    visited = set()
+    path=[]
+    starting_room=(player.current_room,[])
+
+    queue.enqueue(starting_room)
     while queue.size() > 0:
-        bfs_path = queue.dequeue()
-        current_id = bfs_path[-1][0]
-        if current_id not in checked:
-            checked[current_id] = bfs_path
-            for direction, room_id in visited[current_id].items():
-                if room_id == '?':
-                    backtrack_path = bfs_path
-                    break
-                path_to_add = bfs_path + [(room_id, direction)]
-                queue.enqueue(path_to_add)
-    return backtrack_path
+        current_room, path = queue.dequeue()
 
-# def look_around(looking_at):
-#     if location.get_room_in_direction(key).id in visited:
-#         looking_at = location.get_room_in_direction(key).id
-#         visited[location.id][key] = looking_at
-#         if key == 'n':
-#             visited[looking_at]['s'] = location.id
-#         if key == 's':
-#             visited[looking_at]['n'] = location.id
-#         if key == 'e':
-#             visited[looking_at]['w'] = location.id
-#         if key == 'w':
-#             visited[looking_at]['e'] = location.id
+        if current_room.id not in visited:
+            visited.add(current_room.id)
+            #check if it's the guy
+            if current_room.id == target:
+                return path
 
-traversal_path = main_travel(len(room_graph))
+            for direction in current_room.get_exits():
+                path_to_add= path + [direction]
+                queue.enqueue((current_room.get_room_in_direction(direction), path_to_add))
+
+
+def rooms_to_path(player, rooms):
+    path=[]
+    current_room = player.current_room
+    for i in range(len(rooms)-1):
+        possible_directions = {}
+        for direction in current_room.get_exits():
+            possible_directions[current_room.get_room_in_direction(direction).id] = direction
+        if rooms[i+1] in possible_directions:
+            path.append(possible_directions[rooms[i+1]])
+            player.travel(possible_directions[rooms[i+1]])
+            current_room = player.current_room
+        else:
+            bfs_result = bfs(player, rooms[i+1])
+            for bfs_direction in bfs_result:
+                player.travel(bfs_direction)
+                current_room = player.current_room
+            path = path + bfs_result
+            # print(bfs_result)
+    return path
+
+test_directions = test_dft(player)
+# print(test_directions)
+# print(bfs(player, 17))
+# print(rooms_to_path(player, test_directions))
+# print(player.current_room.id)
+traversal_path = rooms_to_path(player, test_directions)
+# main_travel(len(room_graph))
 # print(traversal_path)
 
 
